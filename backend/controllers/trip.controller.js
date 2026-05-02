@@ -1,48 +1,69 @@
-const tripModel = require('../models/trip.model')
+const Trip = require('../models/trip.model');
 
-async function tripAdditionController(req, res){
-    console.log(req.body)
-    try{
-        let tripDetail = tripModel.Trip({
-            tripName: req.body.tripName,
-            startDateOfJourney: req.body.startDateOfJourney,
-            endDateOfJourney: req.body.endDateOfJourney,
-            nameOfHotels: req.body.nameOfHotels,
-            placesVisited: req.body.placesVisited,
-            totalCost: req.body.totalCost,
-            tripType: req.body.tripType,
-            experience: req.body.experience,
-            image: req.body.image,
-            shortDescription: req.body.shortDescription,
-            featured: req.body.featured
-        })
-        await tripDetail.save()
-        res.send('Trip added Successfully')
-    }catch(error){
-        console.log('ERROR')
-        res.send('SOMETHING WENT WRONG')
+
+// ➕ ADD TRIP
+async function tripAdditionController(req, res) {
+    try {
+        console.log("Incoming data:", req.body);
+
+        const {image, tripName, tripType, shortDescription, featured } = req.body;
+
+        // Basic validation
+        if (!tripName || !tripType || !shortDescription) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+const tripDetail = new Trip({
+  tripName,
+  tripType,
+  shortDescription,
+  featured: featured || false,
+  image: image || ""
+});
+
+        const savedTrip = await tripDetail.save();
+
+        res.status(201).json(savedTrip);
+
+    } catch (error) {
+        console.error("ERROR:", error.message);
+        res.status(500).json({ error: error.message });
     }
 }
 
-async function getTripDetailsController(req,res){
-    try{
-        tripModel.Trip.find({})
-        .then(doc => res.send(doc))
-        .catch(err => res.send('SOMETHING WENT WRONG WHILE FETCHING'))
-    }catch(error){
-        console.log('ERROR')
-        res.send('SOMETHING WENT WRONG')
+
+// 📥 GET ALL TRIPS
+async function getTripDetailsController(req, res) {
+    try {
+        const trips = await Trip.find().sort({ createdAt: -1 });
+        res.json(trips);
+    } catch (error) {
+        console.error("ERROR:", error.message);
+        res.status(500).json({ error: error.message });
     }
 }
 
-async function getTripDetailsByIdController(req,res){
-    try{
-        tripModel.Trip.findById(req.params.id)
-        .then(doc => res.send(doc))
-        .catch(err => res.send('Nothing in database'))
-    }catch(error){
-        console.log('ERROR')
-        res.send('SOMETHING WENT WRONG')
+
+// 🔍 GET TRIP BY ID
+async function getTripDetailsByIdController(req, res) {
+    try {
+        const trip = await Trip.findById(req.params.id);
+
+        if (!trip) {
+            return res.status(404).json({ error: "Trip not found" });
+        }
+
+        res.json(trip);
+
+    } catch (error) {
+        console.error("ERROR:", error.message);
+        res.status(500).json({ error: error.message });
     }
 }
-module.exports = { tripAdditionController, getTripDetailsController, getTripDetailsByIdController }
+
+
+module.exports = {
+    tripAdditionController,
+    getTripDetailsController,
+    getTripDetailsByIdController
+};

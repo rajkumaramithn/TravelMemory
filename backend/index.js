@@ -16,6 +16,8 @@ app.get('/hello', (req,res)=>{
     res.send('Hello World!')
 })
 
+app.use('/api/trip', tripRoutes);
+
 app.listen(PORT, ()=>{
     console.log(`Server started at http://localhost:${PORT}`)
 })
